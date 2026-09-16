@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>CRUSADERS · BeatFlash</title>
+<style>
+*{box-sizing:border-box}
+:root{
+--bg:#070811;--card:#0d1020;--line:#252a42;--text:#f5f7ff;--muted:#8d94ad;
+--cyan:#20d9ff;--purple:#a855f7;--lime:#8dff3f;--orange:#ff8a30
+}
+body{
+margin:0;min-height:100vh;
+background:
+radial-gradient(circle at 10% 5%,#172452 0,transparent 34%),
+radial-gradient(circle at 90% 90%,#321344 0,transparent 38%),var(--bg);
+color:var(--text);font-family:Arial,sans-serif
+}
+.wrap{width:min(900px,94%);margin:auto;padding:25px 0}
+header{text-align:center;margin-bottom:22px}
+h1{
+margin:0;font-size:clamp(34px,9vw,64px);letter-spacing:-4px;
+background:linear-gradient(90deg,var(--cyan),var(--purple),var(--orange));
+-webkit-background-clip:text;color:transparent
+}
+.sub{color:var(--muted);margin-top:5px}
+.card{
+background:linear-gradient(145deg,#111527e8,#090b16e8);
+border:1px solid var(--line);border-radius:20px;padding:20px;
+box-shadow:0 18px 50px #0006;margin-bottom:15px
+}
+label{display:block;color:#b8bed2;font-size:13px;margin:14px 0 7px}
+select,button{
+width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);
+background:#111527;color:var(--text);font-size:15px
+}
+input[type=range]{width:100%;accent-color:var(--cyan)}
+button{cursor:pointer;font-weight:bold;transition:.15s}
+button:hover{transform:translateY(-1px);border-color:#596080}
+button:active{transform:scale(.98)}
+.primary{
+border:0;background:linear-gradient(100deg,#16cfee,#8d45ee);margin-top:18px
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.toggle{
+display:flex;align-items:center;justify-content:space-between;
+background:#0b0e1b;border:1px solid var(--line);padding:13px;
+border-radius:12px;margin-top:14px
+}
+.toggle input{width:20px;height:20px;accent-color:var(--cyan)}
+.info{margin-top:12px;border:1px solid #59451e;border-radius:12px;overflow:hidden}
+.info summary{
+cursor:pointer;padding:12px;background:#17140c;color:#ffc95b;font-weight:bold
+}
+.info p{padding:0 13px 13px;color:#aeb4c8;font-size:13px;line-height:1.55;margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.stat{
+background:#0d1120;border:1px solid var(--line);
+border-radius:12px;padding:10px;text-align:center
+}
+.stat b{display:block;font-size:20px}
+.stat small{color:var(--muted)}
+
+#game{display:none}
+.gameTop{
+display:flex;justify-content:space-between;
+align-items:center;margin-bottom:10px
+}
+#windowText{color:var(--cyan);font-weight:bold}
+#feedback{text-align:center;height:32px;font-size:22px;font-weight:bold}
+
+.beatIndicator{
+position:fixed;
+top:10px;
+left:50%;
+transform:translateX(-50%);
+z-index:100;
+display:flex;
+align-items:center;
+gap:8px;
+padding:7px 12px;
+border:1px solid #ffffff18;
+border-radius:999px;
+background:#0b0d18dd;
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+color:#777;
+font-size:10px;
+font-weight:800;
+letter-spacing:2px;
+transition:.08s ease;
+pointer-events:none;
+opacity:.75
+}
+.beatIndicator span{
+width:7px;
+height:7px;
+border-radius:50%;
+background:#333;
+box-shadow:0 0 0 transparent;
+transition:.08s ease
+}
+.beatIndicator.beat{
+color:#fff;
+border-color:#20d9ff66;
+transform:translateX(-50%) scale(1.08);
+opacity:1
+}
+.beatIndicator.beat span{
+background:var(--cyan);
+box-shadow:0 0 14px var(--cyan),0 0 28px var(--cyan)
+}
+
+.grid{
+display:grid;grid-template-columns:1fr 1fr;gap:14px;
+width:min(520px,90vw);margin:30px auto
+}
+.pad{
+aspect-ratio:1;border-radius:28px;border:2px solid #252b45;
+opacity:.32;transition:.06s;box-shadow:inset 0 0 30px #0008;
+touch-action:none
+}
+.pad:nth-child(1){background:linear-gradient(145deg,#20d9ff,#08658a)}
+.pad:nth-child(2){background:linear-gradient(145deg,#a855f7,#482080)}
+.pad:nth-child(3){background:linear-gradient(145deg,#8dff3f,#397c16)}
+.pad:nth-child(4){background:linear-gradient(145deg,#ff8a30,#87370b)}
+.pad.active{
+opacity:1;transform:scale(.96);
+box-shadow:0 0 35px currentColor,inset 0 0 25px #fff8
+}
+.pad.hit{animation:hit .15s}
+@keyframes hit{50%{transform:scale(.9)}}
+
+#swipeArea{
+display:none;position:relative;width:min(650px,92vw);
+height:min(650px,72vh);margin:20px auto;
+border-radius:20px;overflow:hidden;border:1px solid var(--line);
+background:
+linear-gradient(#ffffff08 1px,transparent 1px),
+linear-gradient(90deg,#ffffff08 1px,transparent 1px),
+radial-gradient(circle,#111832,#090c18);
+background-size:10% 10%,10% 10%,100% 100%;
+touch-action:none
+}
+.target{
+position:absolute;width:clamp(30px,8vw,55px);
+height:clamp(30px,8vw,55px);border-radius:50%;
+transform:translate(-50%,-50%);
+background:radial-gradient(circle at 35% 30%,#fff,var(--cyan) 20%,#7250ff 65%,#28175e);
+box-shadow:0 0 15px var(--cyan),0 0 40px #694cff88;
+animation:spawn .18s ease-out
+}
+.target:after{
+content:"";position:absolute;inset:-8px;border-radius:50%;
+border:2px solid #20d9ff88;animation:pulse .7s infinite
+}
+@keyframes spawn{
+from{transform:translate(-50%,-50%) scale(0)}
+to{transform:translate(-50%,-50%) scale(1)}
+}
+@keyframes pulse{
+50%{transform:scale(1.2);opacity:.2}
+}
+
+/* STACK MODE */
+#stackArea{display:none;position:relative;width:min(650px,92vw);height:min(650px,72vh);margin:20px auto;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:radial-gradient(circle,#111832,#090c18);touch-action:none;cursor:pointer}
+#stackCanvas{width:100%;height:100%;display:block}
+#stackHint{position:absolute;top:10px;left:50%;transform:translateX(-50%);color:var(--muted);font-size:11px;font-weight:800;letter-spacing:2px;pointer-events:none}
+
+#timerBar{
+width:min(650px,92vw);height:7px;background:#111528;
+border-radius:99px;margin:-12px auto 15px;overflow:hidden
+}
+#timerFill{
+width:100%;height:100%;
+background:linear-gradient(90deg,var(--cyan),var(--purple),var(--orange));
+transform-origin:left
+}
+#visual{
+width:100%;height:65px;background:#090c17;border-radius:12px
+}
+#result{display:none;text-align:center}
+.bigScore{font-size:55px;font-weight:900}
+.speedVal{color:var(--cyan);font-weight:bold}
+
+/* LIVES INCREMENTOR */
+.livesBox{margin-bottom:2px}
+.livesControl{
+display:grid;
+grid-template-columns:66px 1fr 66px;
+gap:8px;
+height:52px
+}
+.lifeBtn{
+padding:0;
+font-size:25px;
+font-weight:900;
+border-radius:14px;
+background:#111527;
+transition:.15s
+}
+.lifeBtn:disabled{
+opacity:.3;
+cursor:not-allowed;
+transform:none
+}
+.lifeValue{
+display:flex;
+align-items:center;
+justify-content:center;
+border:1px solid var(--line);
+border-radius:14px;
+font-size:22px;
+font-weight:900;
+background:linear-gradient(100deg,#ff304f,#ff7a18);
+color:#fff;
+text-shadow:0 1px 5px #0008;
+transition:.2s ease;
+box-shadow:0 0 20px #0004
+}
+.lifeValue small{
+font-size:10px;
+margin-left:6px;
+opacity:.7;
+letter-spacing:1px
+}
+
+/* COOL SONG IMPORT */
+.file-picker{
+position:relative;
+display:block;
+width:100%;
+min-height:115px;
+border:1px solid var(--cyan);
+border-radius:16px;
+overflow:hidden;
+cursor:pointer;
+background:var(--cyan);
+color:#050a10;
+transition:transform .15s ease,box-shadow .2s ease;
+margin-top:0
+}
+.file-picker:hover{
+transform:translateY(-2px);
+box-shadow:0 12px 35px rgba(32,217,255,.18)
+}
+.file-picker:active{transform:scale(.98)}
+.file-picker input{
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+opacity:0;
+cursor:pointer;
+z-index:3
+}
+.file-inner{
+position:absolute;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:18px;
+overflow:hidden
+}
+.file-main{
+position:relative;
+z-index:2;
+min-width:0;
+padding-right:12px
+}
+.file-title{
+font-size:19px;
+font-weight:1000;
+letter-spacing:-.5px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis
+}
+.file-sub{
+margin-top:5px;
+font-size:10px;
+font-weight:700;
+opacity:.65
+}
+.file-icon{
+position:relative;
+z-index:2;
+flex:0 0 54px;
+width:54px;
+height:54px;
+border:2px solid #050a10;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:23px;
+font-weight:900;
+transition:transform .3s ease,background .3s ease
+}
+.file-picker:hover .file-icon{
+transform:rotate(8deg) scale(1.08);
+background:#050a10;
+color:var(--cyan)
+}
+.file-wave{
+position:absolute;
+left:-10%;
+right:-10%;
+bottom:-33px;
+height:80px;
+background:repeating-linear-gradient(90deg,#050a10 0 4px,transparent 4px 13px);
+opacity:.08;
+transform:rotate(-3deg);
+animation:fileWave 1.5s linear infinite
+}
+@keyframes fileWave{
+from{transform:translateX(0) rotate(-3deg)}
+to{transform:translateX(40px) rotate(-3deg)}
+}
+.file-picker.loaded{
+background:#050a10;
+color:var(--cyan);
+border-color:var(--cyan)
+}
+.file-picker.loaded .file-icon{
+background:var(--cyan);
+color:#050a10
+}
+
+@media(max-width:600px){
+.row,.stats{grid-template-columns:1fr 1fr}
+.grid{gap:10px}.pad{border-radius:20px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="beatIndicator" id="beatIndicator">
+<span></span>BEAT
+</div>
+
+<div class="wrap">
+
+<header>
+<h1>CRUSADERS</h1>
+<div class="sub">BEATFLASH · SWIPE-IO · STACK</div>
+</header>
+
+<section class="card" id="setup">
+
+<label>GAME MODE</label>
+<select id="mode">
+<option value="beat">BeatFlash</option>
+<option value="swipe">Crusaders · Swipe-io</option>
+<option value="stack">Crusaders · Stack</option>
+</select>
+
+<label>SONG</label>
+
+<label class="file-picker" id="filePicker">
+<input id="file" type="file" accept="audio/*">
+
+<div class="file-inner">
+<div class="file-main">
+<div class="file-title" id="fileTitle">DROP YOUR TRACK</div>
+<div class="file-sub" id="fileSub">TAP TO CHOOSE AN AUDIO FILE</div>
+</div>
+
+<div class="file-icon">+</div>
+</div>
+
+<div class="file-wave"></div>
+</label>
+
+<div id="audioOnlyOptions">
+
+<div class="row">
+
+<div class="livesBox">
+<label>LIVES</label>
+
+<div class="livesControl">
+<button class="lifeBtn" id="lifeMinus">−</button>
+
+<div class="lifeValue" id="lifeValue">
+<span id="livesNumber">5</span>
+<small>LIVES</small>
+</div>
+
+<button class="lifeBtn" id="lifePlus">+</button>
+</div>
+
+</div>
+
+<div>
+<label>DIFFICULTY</label>
+<select id="difficulty">
+<option value="2">Noob · 2.0s</option>
+<option value="1" selected>Moderate · 1.0s</option>
+<option value=".75">Pro · 0.75s</option>
+<option value=".5">Apprentice · 0.5s</option>
+</select>
+</div>
+
+</div>
+
+<div class="toggle">
+<span>
+Progressive Difficulty<br>
+<small style="color:#777">−0.1s every 3 seconds</small>
+</span>
+<input id="progressive" type="checkbox">
+</div>
+
+<label>
+BEAT SENSITIVITY <b id="sensVal">50</b>
+</label>
+<input id="sensitivity" type="range" min="10" max="100" value="50">
+
+<label>
+AUDIO CALIBRATION <b id="calVal">0 ms</b>
+</label>
+<input id="calibration" type="range" min="-150" max="150" value="0">
+
+<details class="info">
+<summary>⚠️ What does Audio Calibration do?</summary>
+<p>
+Audio calibration compensates for timing differences between your device,
+headphones/speakers and the game.
+<br><br>
+<b>0 ms</b> = normal timing.<br>
+<b>+100 ms</b> = timing is shifted 0.1 seconds later.<br>
+<b>-100 ms</b> = timing is shifted 0.1 seconds earlier.
+<br><br>
+It does <b>not</b> change the song. It only changes when the game considers
+the beat to happen. If your taps feel consistently early or late, adjust it.
+</p>
+</details>
+
+</div>
+
+<label>
+GAME SPEED <span class="speedVal" id="speedVal">1.00×</span>
+</label>
+<input id="speed" type="range" min="0.5" max="2" step=".05" value="1">
+
+<button class="primary" id="start">ANALYZE SONG</button>
+</section>
+
+<section class="card" id="loading" style="display:none;text-align:center">
+<h2>ANALYZING...</h2>
+<p id="loadText" style="color:var(--muted)">Reading audio</p>
+</section>
+
+<section class="card" id="game">
+
+<div class="gameTop">
+<div>
+<b>SCORE <span id="score">0</span></b>
+&nbsp; · &nbsp;
+<b>COMBO <span id="combo">0</span></b>
+</div>
+<div>
+<span id="lifeWrap">❤️ <span id="lifeText">5</span></span>
+<span id="heightWrap" style="display:none">🏗️ <span id="heightText">0</span></span>
+</div>
+</div>
+
+<div style="text-align:center;margin-bottom:8px">
+<span id="windowText">1.00s</span>
+<span id="windowLabel">reaction window</span>
+</div>
+
+<canvas id="visual"></canvas>
+<div id="feedback"></div>
+
+<div class="grid" id="beatGrid">
+<div class="pad" data-i="0"></div>
+<div class="pad" data-i="1"></div>
+<div class="pad" data-i="2"></div>
+<div class="pad" data-i="3"></div>
+</div>
+
+<div id="swipeArea">
+<div class="target" id="target"></div>
+</div>
+
+<div id="stackArea">
+<canvas id="stackCanvas"></canvas>
+<div id="stackHint">TAP OR PRESS SPACE TO DROP</div>
+</div>
+
+<div id="timerBar">
+<div id="timerFill"></div>
+</div>
+
+<button id="quit">QUIT</button>
+</section>
+
+<section class="card" id="result">
+
+<div style="color:var(--muted)">FINAL SCORE</div>
+<div class="bigScore" id="finalScore">0</div>
+
+<div class="stats">
+<div class="stat">
+<b id="perfect">0</b><small>Perfect</small>
+</div>
+<div class="stat">
+<b id="good">0</b><small>Good</small>
+</div>
+<div class="stat">
+<b id="miss">0</b><small id="missLabel">Miss</small>
+</div>
+<div class="stat">
+<b id="best">0</b><small>Best Combo</small>
+</div>
+</div>
+
+<button class="primary" id="again">PLAY AGAIN</button>
+</section>
+
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const pads=[...document.querySelectorAll(".pad")];
+
+let audioCtx,gameAudio,ambientAudio,url,beats=[],nextBeat=0,targetIndex=-1;
+let score=0,combo=0,best=0,misses=0,perfect=0,good=0,lives=5;
+let baseWindow=1,cal=0,startTime=0,progressive=false;
+let gameSpeed=1,raf,analyser,mode="beat";
+let swipeTarget=null,lastPointer=false;
+
+let stackBlocks=[],stackMoving=null,stackFalling=[],stackDir=1;
+let stackRunning=false,stackRaf=null,stackLastTs=0,stackBH=34;
+
+const MIN_LIVES=3;
+const MAX_LIVES=20;
+const DEFAULT_LIVES=5;
+
+const fileInput=$("file");
+const filePicker=$("filePicker");
+const fileTitle=$("fileTitle");
+const fileSub=$("fileSub");
+
+function updateLivesUI(){
+ $("livesNumber").textContent=lives;
+
+ $("lifeMinus").disabled=lives<=MIN_LIVES;
+ $("lifePlus").disabled=lives>=MAX_LIVES;
+
+ /*
+  3 lives = hardest
+  20 lives = easiest
+
+  Hue moves from red/orange toward green.
+ */
+ const ratio=(lives-MIN_LIVES)/(MAX_LIVES-MIN_LIVES);
+
+ const hue=ratio*115;
+ const hue2=Math.min(140,hue+25);
+
+ const value=$("lifeValue");
+
+ value.style.background=
+  `linear-gradient(100deg,hsl(${hue},90%,48%),hsl(${hue2},90%,58%))`;
+
+ value.style.boxShadow=
+  `0 0 22px hsla(${hue},90%,55%,.22)`;
+}
+
+function changeLives(amount){
+ lives=Math.max(
+  MIN_LIVES,
+  Math.min(MAX_LIVES,lives+amount)
+ );
+
+ updateLivesUI();
+}
+
+$("lifeMinus").onclick=()=>changeLives(-1);
+$("lifePlus").onclick=()=>changeLives(1);
+
+updateLivesUI();
+
+fileInput.onchange=()=>{
+ const file=fileInput.files[0];
+
+ if(!file){
+  fileTitle.textContent="DROP YOUR TRACK";
+  fileSub.textContent=$("mode").value==="stack"?"OPTIONAL · TAP TO ADD BACKGROUND MUSIC":"TAP TO CHOOSE AN AUDIO FILE";
+  filePicker.classList.remove("loaded");
+  return;
+ }
+
+ fileTitle.textContent=file.name;
+ fileSub.textContent="TRACK READY · TAP TO CHANGE";
+ filePicker.classList.add("loaded");
+};
+
+$("sensitivity").oninput=()=>{
+ $("sensVal").textContent=$("sensitivity").value;
+};
+
+$("calibration").oninput=()=>{
+ cal=+$("calibration").value;
+ $("calVal").textContent=cal+" ms";
+};
+
+$("speed").oninput=()=>{
+ gameSpeed=+$("speed").value;
+ $("speedVal").textContent=gameSpeed.toFixed(2)+"×";
+};
+
+function updateModeUI(){
+ const isStack=$("mode").value==="stack";
+ $("audioOnlyOptions").style.display=isStack?"none":"block";
+ $("start").textContent=isStack?"START STACKING":"ANALYZE SONG";
+ if(!fileInput.files[0]){
+  fileSub.textContent=isStack?"OPTIONAL · TAP TO ADD BACKGROUND MUSIC":"TAP TO CHOOSE AN AUDIO FILE";
+ }
+}
+$("mode").onchange=updateModeUI;
+updateModeUI();
+
+function beatFlash(){
+ const el=$("beatIndicator");
+
+ el.classList.remove("beat");
+ void el.offsetWidth;
+ el.classList.add("beat");
+
+ clearTimeout(el._beatTimer);
+
+ el._beatTimer=setTimeout(()=>{
+  el.classList.remove("beat");
+ },120);
+}
+
+function fft(re,im){
+ const n=re.length;
+
+ for(let i=1,j=0;i<n;i++){
+  let b=n>>1;
+
+  for(;j&b;b>>=1)j^=b;
+
+  j^=b;
+
+  if(i<j)[re[i],re[j]]=[re[j],re[i]];
+ }
+
+ for(let len=2;len<=n;len<<=1){
+  let a=-2*Math.PI/len;
+
+  for(let i=0;i<n;i+=len){
+   for(let j=0;j<len/2;j++){
+    let c=Math.cos(a*j),s=Math.sin(a*j);
+
+    let tr=
+     re[i+j+len/2]*c-
+     im[i+j+len/2]*s;
+
+    let ti=
+     re[i+j+len/2]*s+
+     im[i+j+len/2]*c;
+
+    re[i+j+len/2]=re[i+j]-tr;
+    im[i+j+len/2]=im[i+j]-ti;
+
+    re[i+j]+=tr;
+    im[i+j]+=ti;
+   }
+  }
+ }
+}
+
+async function analyze(buf){
+ $("loadText").textContent="Decoding audio...";
+
+ const ac=new AudioContext();
+ const data=await ac.decodeAudioData(buf);
+ const src=data.getChannelData(0);
+ const rate=data.sampleRate;
+
+ const targetRate=22050;
+ const step=Math.max(1,Math.floor(rate/targetRate));
+ const mono=[];
+
+ for(let i=0;i<src.length;i+=step)
+  mono.push(src[i]);
+
+ $("loadText").textContent="Detecting beats...";
+
+ const N=1024,H=512,flux=[];
+ const re=new Float32Array(N);
+ const im=new Float32Array(N);
+ let prev=new Float32Array(N/2);
+
+ const frames=Math.floor((mono.length-N)/H);
+
+ for(let f=0;f<frames;f++){
+  let p=f*H;
+
+  for(let i=0;i<N;i++){
+   let x=mono[p+i]||0;
+   let w=.5-.5*Math.cos(2*Math.PI*i/(N-1));
+
+   re[i]=x*w;
+   im[i]=0;
+  }
+
+  fft(re,im);
+
+  let sum=0;
+
+  for(let k=1;k<N/2;k++){
+   let m=Math.log1p(Math.hypot(re[k],im[k]));
+
+   sum+=Math.max(0,m-prev[k]);
+   prev[k]=m;
+  }
+
+  flux.push(sum);
+ }
+
+ let avg=flux.reduce((a,b)=>a+b,0)/flux.length;
+
+ let sd=Math.sqrt(
+  flux.reduce((a,b)=>a+(b-avg)**2,0)/flux.length
+ );
+
+ let threshold=
+  avg+sd*(1.1-(+$("sensitivity").value)/100*.6);
+
+ let peaks=[],last=-999;
+
+ for(let i=2;i<flux.length-2;i++){
+  if(
+   flux[i]>threshold&&
+   flux[i]>=flux[i-1]&&
+   flux[i]>=flux[i+1]
+  ){
+   let t=i*H/targetRate;
+
+   if(t-last>.16){
+    peaks.push(t);
+    last=t;
+   }
+  }
+ }
+
+ if(peaks.length<2){
+  await ac.close();
+  return [];
+ }
+
+ let bestBpm=120,bestFit=-1;
+
+ for(let bpm=70;bpm<=180;bpm++){
+  let interval=60/bpm;
+  let fit=0;
+
+  for(let p of peaks){
+   let q=Math.abs(Math.sin(Math.PI*p/interval));
+   fit+=1-q;
+  }
+
+  if(fit>bestFit){
+   bestFit=fit;
+   bestBpm=bpm;
+  }
+ }
+
+ let interval=60/bestBpm;
+ let first=peaks[0],grid=[];
+
+ for(
+  let t=first;
+  t<data.duration+interval;
+  t+=interval
+ ){
+  grid.push(t);
+ }
+
+ let merged=[];
+
+ for(let t of grid){
+  if(!merged.length||t-merged.at(-1)>.18)
+   merged.push(t);
+ }
+
+ await ac.close();
+
+ return merged;
+}
+
+function beep(freq=700,dur=.08,type="sine"){
+ if(!audioCtx)return;
+
+ let o=audioCtx.createOscillator();
+ let g=audioCtx.createGain();
+
+ o.type=type;
+
+ o.frequency.setValueAtTime(
+  freq,
+  audioCtx.currentTime
+ );
+
+ o.frequency.exponentialRampToValueAtTime(
+  freq*1.5,
+  audioCtx.currentTime+dur
+ );
+
+ g.gain.setValueAtTime(
+  .001,
+  audioCtx.currentTime
+ );
+
+ g.gain.exponentialRampToValueAtTime(
+  .14,
+  audioCtx.currentTime+.01
+ );
+
+ g.gain.exponentialRampToValueAtTime(
+  .001,
+  audioCtx.currentTime+dur
+ );
+
+ o.connect(g).connect(audioCtx.destination);
+
+ o.start();
+ o.stop(audioCtx.currentTime+dur);
+}
+
+function gainSound(){
+ beep(620,.06);
+ setTimeout(()=>beep(930,.09),35);
+}
+
+function currentWindow(){
+ if(!progressive)return baseWindow;
+
+ let elapsed=gameAudio.currentTime-startTime;
+ let realSeconds=elapsed/gameSpeed;
+
+ return Math.max(
+  .2,
+  baseWindow-Math.floor(realSeconds/3)*.1
+ );
+}
+
+function gameplayTime(){
+ return gameAudio.currentTime/gameSpeed;
+}
+
+function feedback(t){
+ $("feedback").textContent=t;
+
+ setTimeout(()=>{
+  if($("feedback").textContent===t)
+   $("feedback").textContent="";
+ },280);
+}
+
+function updateStats(){
+ $("score").textContent=score;
+ $("combo").textContent=combo;
+ $("lifeText").textContent=lives;
+ $("heightText").textContent=Math.max(0,stackBlocks.length-1);
+}
+
+function choosePad(){
+ let n=Math.floor(Math.random()*4);
+
+ while(n===targetIndex)
+  n=Math.floor(Math.random()*4);
+
+ targetIndex=n;
+
+ pads.forEach(p=>p.classList.remove("active"));
+ pads[n].classList.add("active");
+}
+
+function loseLife(){
+ if(lives<=0)return;
+
+ lives--;
+ misses++;
+
+ updateStats();
+
+ if(lives<=0)
+  setTimeout(finish,180);
+}
+
+function hitPad(i){
+ if(mode!=="beat"||targetIndex<0||lives<=0)return;
+
+ let t=gameAudio.currentTime;
+ let corrected=t-cal/1000;
+
+ let beatIndex=Math.max(0,nextBeat-1);
+ let beat=beats[beatIndex]??corrected;
+
+ let d=Math.abs(corrected-beat);
+ let w=currentWindow()/gameSpeed;
+
+ if(i!==targetIndex){
+  combo=0;
+  loseLife();
+  feedback("WRONG");
+  beep(120,.1,"sawtooth");
+  return;
+ }
+
+ if(d<=w){
+  if(d<w*.2){
+   score+=100+combo*5;
+   perfect++;
+
+   feedback("PERFECT!");
+   beep(880,.06);
+  }else{
+   score+=50+combo*2;
+   good++;
+
+   feedback("GOOD");
+   beep(620,.06);
+  }
+
+  combo++;
+  best=Math.max(best,combo);
+
+  pads[i].classList.add("hit");
+
+  setTimeout(()=>{
+   pads[i].classList.remove("hit");
+  },150);
+
+  choosePad();
+
+ }else{
+  combo=0;
+  loseLife();
+
+  feedback("LATE");
+  beep(150,.1,"square");
+ }
+
+ updateStats();
+}
+
+pads.forEach((p,i)=>{
+ p.onpointerdown=e=>{
+  e.preventDefault();
+  hitPad(i);
+ };
+});
+
+function spawnTarget(){
+ let x=8+Math.random()*84;
+ let y=8+Math.random()*84;
+
+ swipeTarget={
+  x,y,
+  born:gameplayTime()
+ };
+
+ $("target").style.left=x+"%";
+ $("target").style.top=y+"%";
+}
+
+function targetHit(){
+ if(!swipeTarget)return;
+
+ let gained=100+combo*5;
+
+ score+=gained;
+ combo++;
+
+ best=Math.max(best,combo);
+ perfect++;
+
+ feedback("+"+gained);
+ gainSound();
+
+ swipeTarget=null;
+ spawnTarget();
+
+ updateStats();
+}
+
+function pointerCheck(e){
+ if(mode!=="swipe"||!swipeTarget)return;
+
+ let r=$("swipeArea").getBoundingClientRect();
+
+ let x=e.clientX-r.left;
+ let y=e.clientY-r.top;
+
+ let tx=r.width*swipeTarget.x/100;
+ let ty=r.height*swipeTarget.y/100;
+
+ let d=Math.hypot(x-tx,y-ty);
+
+ if(d<Math.max(35,r.width*.055))
+  targetHit();
+}
+
+$("swipeArea").onpointerdown=e=>{
+ lastPointer=true;
+
+ $("swipeArea").setPointerCapture?.(
+  e.pointerId
+ );
+
+ pointerCheck(e);
+};
+
+$("swipeArea").onpointermove=e=>{
+ if(lastPointer)
+  pointerCheck(e);
+};
+
+$("swipeArea").onpointerup=()=>{
+ lastPointer=false;
+};
+
+$("swipeArea").onpointercancel=()=>{
+ lastPointer=false;
+};
+
+/* ---------- STACK MODE ---------- */
+
+function resizeStackCanvas(){
+ const box=$("stackArea");
+ const c=$("stackCanvas");
+ c.width=box.clientWidth*devicePixelRatio;
+ c.height=box.clientHeight*devicePixelRatio;
+ c._w=box.clientWidth;
+ c._h=box.clientHeight;
+}
+
+function nextStackColor(){
+ const hues=[190,270,95,28];
+ const h=hues[stackBlocks.length%hues.length];
+ return `hsl(${h},85%,58%)`;
+}
+
+function spawnStackMoving(){
+ const below=stackBlocks[stackBlocks.length-1];
+ const W=$("stackCanvas")._w;
+ const fromLeft=stackBlocks.length%2===0;
+ stackDir=fromLeft?1:-1;
+ stackMoving={x:fromLeft?0:W-below.width,width:below.width,color:nextStackColor()};
+}
+
+function initStack(){
+ resizeStackCanvas();
+ stackBH=Math.max(26,$("stackCanvas")._h*0.085);
+ const W=$("stackCanvas")._w;
+ const baseWidth=W*0.55;
+ stackBlocks=[{x:(W-baseWidth)/2,width:baseWidth,color:"hsl(190,85%,58%)"}];
+ stackFalling=[];
+ spawnStackMoving();
+}
+
+function drawStack(){
+ const c=$("stackCanvas");
+ const ctx=c.getContext("2d");
+ const W=c._w,H=c._h;
+
+ ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ ctx.clearRect(0,0,W,H);
+
+ const visibleRows=Math.floor(H/stackBH)-1;
+ const camRow=Math.max(0,stackBlocks.length-visibleRows);
+
+ for(let i=0;i<stackBlocks.length;i++){
+  const b=stackBlocks[i];
+  const y=H-stackBH-(i-camRow)*stackBH;
+  if(y<-stackBH||y>H)continue;
+  ctx.fillStyle=b.color;
+  ctx.fillRect(b.x,y,b.width,stackBH-3);
+  ctx.strokeStyle="#ffffff22";
+  ctx.strokeRect(b.x,y,b.width,stackBH-3);
+ }
+
+ for(let i=stackFalling.length-1;i>=0;i--){
+  const p=stackFalling[i];
+  p.y+=p.vy;
+  p.vy+=0.6;
+  p.alpha-=0.02;
+  if(p.alpha<=0||p.y>H+60){stackFalling.splice(i,1);continue;}
+  ctx.globalAlpha=Math.max(0,p.alpha);
+  ctx.fillStyle=p.color;
+  ctx.fillRect(p.x,p.y,p.width,stackBH-3);
+  ctx.globalAlpha=1;
+ }
+
+ if(stackMoving){
+  const y=H-stackBH-(stackBlocks.length-camRow)*stackBH;
+  ctx.fillStyle=stackMoving.color;
+  ctx.shadowColor=stackMoving.color;
+  ctx.shadowBlur=18;
+  ctx.fillRect(stackMoving.x,y,stackMoving.width,stackBH-3);
+  ctx.shadowBlur=0;
+ }
+}
+
+function stackTick(ts){
+ if(!stackRunning)return;
+
+ const dt=Math.min(3,(ts-stackLastTs)/16.67);
+ stackLastTs=ts;
+
+ const W=$("stackCanvas")._w;
+ const speed=(2.2+Math.min((stackBlocks.length-1)*0.12,5))*gameSpeed;
+
+ stackMoving.x+=stackDir*speed*dt;
+
+ if(stackMoving.x<=0){stackMoving.x=0;stackDir=1;}
+ if(stackMoving.x+stackMoving.width>=W){stackMoving.x=W-stackMoving.width;stackDir=-1;}
+
+ if(ambientAudio&&beats.length){
+  const t=ambientAudio.currentTime;
+
+  while(nextBeat<beats.length&&beats[nextBeat]<t-.05)
+   nextBeat++;
+
+  if(nextBeat<beats.length&&Math.abs(beats[nextBeat]-t)<.05){
+   beatFlash();
+   stackDir*=-1;
+   nextBeat++;
+  }
+ }
+
+ drawStack();
+ stackRaf=requestAnimationFrame(stackTick);
+}
+
+function placeStackBlock(){
+ if(!stackRunning||!stackMoving)return;
+
+ const below=stackBlocks[stackBlocks.length-1];
+ const c=$("stackCanvas");
+ const H=c._h;
+ const visibleRows=Math.floor(H/stackBH)-1;
+ const camRow=Math.max(0,stackBlocks.length-visibleRows);
+ const y=H-stackBH-(stackBlocks.length-camRow)*stackBH;
+
+ const overlapStart=Math.max(stackMoving.x,below.x);
+ const overlapEnd=Math.min(stackMoving.x+stackMoving.width,below.x+below.width);
+ const overlapWidth=overlapEnd-overlapStart;
+
+ if(overlapWidth<=2){
+  stackFalling.push({x:stackMoving.x,width:stackMoving.width,y,vy:1,alpha:1,color:stackMoving.color});
+  stackMoving=null;
+  feedback("MISSED");
+  beep(150,.12,"square");
+  finishStack();
+  return;
+ }
+
+ const offset=Math.abs(stackMoving.x-below.x);
+ const isPerfect=offset<Math.max(3,stackMoving.width*0.04);
+
+ if(stackMoving.x<overlapStart){
+  stackFalling.push({x:stackMoving.x,width:overlapStart-stackMoving.x,y,vy:1,alpha:1,color:stackMoving.color});
+ }
+ if(stackMoving.x+stackMoving.width>overlapEnd){
+  stackFalling.push({x:overlapEnd,width:(stackMoving.x+stackMoving.width)-overlapEnd,y,vy:1,alpha:1,color:stackMoving.color});
+ }
+
+ const newWidth=isPerfect?below.width:overlapWidth;
+ const newX=isPerfect?below.x:overlapStart;
+
+ stackBlocks.push({x:newX,width:newWidth,color:stackMoving.color});
+
+ combo++;
+ best=Math.max(best,combo);
+
+ if(isPerfect){
+  perfect++;
+  score+=2;
+  feedback("PERFECT!");
+  beep(880,.07);
+ }else{
+  good++;
+  score+=1;
+  feedback("+1");
+  beep(620,.06);
+ }
+
+ updateStats();
+ spawnStackMoving();
+}
+
+function finishStack(){
+ stackRunning=false;
+ cancelAnimationFrame(stackRaf);
+ misses=1;
+ setTimeout(finish,250);
+}
+
+$("stackArea").onpointerdown=e=>{
+ e.preventDefault();
+ placeStackBlock();
+};
+
+document.addEventListener("keydown",e=>{
+ if(e.code==="Space"&&mode==="stack"&&stackRunning){
+  e.preventDefault();
+  placeStackBlock();
+ }
+});
+
+/* ---------- shared visual + start/finish ---------- */
+
+function drawVisual(){
+ if(!analyser)return;
+
+ let a=
+  new Uint8Array(analyser.frequencyBinCount);
+
+ analyser.getByteFrequencyData(a);
+
+ let c=$("visual");
+ let x=c.getContext("2d");
+
+ let w=c.width=
+  c.clientWidth*devicePixelRatio;
+
+ let h=c.height=
+  c.clientHeight*devicePixelRatio;
+
+ x.clearRect(0,0,w,h);
+
+ let bw=w/a.length;
+
+ for(let i=0;i<a.length;i++){
+  let v=a[i]/255*h;
+
+  x.fillStyle=
+   `hsl(${180+i/a.length*130},90%,60%)`;
+
+  x.fillRect(
+   i*bw,
+   h-v,
+   bw-1,
+   v
+  );
+ }
+}
+
+function loop(){
+ if(!gameAudio||gameAudio.paused)return;
+
+ if(mode==="beat"){
+  let t=gameAudio.currentTime-cal/1000;
+
+  while(
+   nextBeat<beats.length&&
+   beats[nextBeat]<t-.05
+  ){
+   nextBeat++;
+  }
+
+  if(
+   nextBeat<beats.length&&
+   Math.abs(beats[nextBeat]-t)<.045/gameSpeed
+  ){
+   beatFlash();
+   choosePad();
+   nextBeat++;
+  }
+
+  $("windowText").textContent=
+   currentWindow().toFixed(2)+"s";
+
+  $("windowLabel").textContent=
+   "reaction window";
+
+  $("beatGrid").style.display="grid";
+  $("swipeArea").style.display="none";
+  $("timerBar").style.display="none";
+
+ }else{
+
+  $("beatGrid").style.display="none";
+  $("swipeArea").style.display="block";
+  $("timerBar").style.display="block";
+
+  $("windowText").textContent=
+   currentWindow().toFixed(2)+"s";
+
+  $("windowLabel").textContent=
+   "target lifetime";
+
+  if(!swipeTarget){
+   spawnTarget();
+  }else{
+   let elapsed=
+    gameplayTime()-swipeTarget.born;
+
+   let w=currentWindow();
+
+   $("timerFill").style.transform=
+    `scaleX(${Math.max(0,1-elapsed/w)})`;
+
+   if(elapsed>=w){
+    swipeTarget=null;
+    combo=0;
+    misses++;
+    lives--;
+
+    feedback("MISSED");
+    beep(150,.1,"square");
+
+    updateStats();
+
+    if(lives<=0){
+     finish();
+     return;
+    }
+
+    spawnTarget();
+   }
+  }
+ }
+
+ drawVisual();
+
+ if(gameAudio.ended){
+  finish();
+  return;
+ }
+
+ raf=requestAnimationFrame(loop);
+}
+
+function resetGameUI(){
+ $("lifeWrap").style.display="inline";
+ $("heightWrap").style.display="none";
+ $("windowText").parentElement.style.display="block";
+ $("visual").style.display="block";
+ $("beatGrid").style.display="none";
+ $("swipeArea").style.display="none";
+ $("stackArea").style.display="none";
+ $("timerBar").style.display="none";
+}
+
+async function startStackGame(){
+ $("setup").style.display="none";
+
+ beats=[];
+ nextBeat=0;
+
+ const f=$("file").files[0];
+
+ if(f){
+  $("loading").style.display="block";
+  $("loadText").textContent="Syncing to the beat...";
+
+  try{
+   beats=await analyze(await f.arrayBuffer());
+  }catch(e){
+   beats=[];
+  }
+
+  $("loading").style.display="none";
+ }
+
+ $("game").style.display="block";
+
+ resetGameUI();
+
+ score=0;combo=0;best=0;misses=0;perfect=0;good=0;
+ updateStats();
+
+ $("lifeWrap").style.display="none";
+ $("heightWrap").style.display="inline";
+ $("windowText").parentElement.style.display="none";
+ $("visual").style.display="none";
+ $("stackArea").style.display="block";
+
+ gameSpeed=+$("speed").value;
+ audioCtx=audioCtx||new AudioContext();
+
+ initStack();
+
+ stackRunning=true;
+ stackLastTs=performance.now();
+ stackRaf=requestAnimationFrame(stackTick);
+
+ if(f){
+  try{
+   url=URL.createObjectURL(f);
+   ambientAudio=new Audio(url);
+   ambientAudio.loop=true;
+   ambientAudio.volume=.6;
+   await ambientAudio.play();
+  }catch(e){}
+ }
+}
+
+async function startGame(){
+ mode=$("mode").value;
+
+ if(mode==="stack"){
+  await startStackGame();
+  return;
+ }
+
+ let f=$("file").files[0];
+
+ if(!f){
+  alert("Choose an audio file first.");
+  return;
+ }
+
+ $("setup").style.display="none";
+ $("loading").style.display="block";
+ $("loadText").textContent="Preparing...";
+
+ try{
+  baseWindow=+$("difficulty").value;
+  progressive=$("progressive").checked;
+  cal=+$("calibration").value;
+  gameSpeed=+$("speed").value;
+
+  beats=await analyze(await f.arrayBuffer());
+
+  if(!beats.length)
+   throw Error("No beats");
+
+  score=0;
+  combo=0;
+  best=0;
+  misses=0;
+  perfect=0;
+  good=0;
+  nextBeat=0;
+  targetIndex=-1;
+  swipeTarget=null;
+
+  $("loading").style.display="none";
+  $("game").style.display="block";
+
+  resetGameUI();
+  updateStats();
+
+  audioCtx=new AudioContext();
+  gameAudio=new Audio();
+
+  url=URL.createObjectURL(f);
+  gameAudio.src=url;
+  gameAudio.playbackRate=gameSpeed;
+
+  analyser=audioCtx.createAnalyser();
+  analyser.fftSize=256;
+
+  let source=
+   audioCtx.createMediaElementSource(gameAudio);
+
+  source.connect(analyser)
+   .connect(audioCtx.destination);
+
+  await gameAudio.play();
+
+  startTime=gameAudio.currentTime;
+
+  if(mode==="beat")
+   choosePad();
+  else
+   spawnTarget();
+
+  loop();
+
+ }catch(e){
+  console.error(e);
+
+  $("loading").style.display="none";
+  $("setup").style.display="block";
+
+  alert("Couldn't analyze this song.");
+ }
+}
+
+function finish(){
+ cancelAnimationFrame(raf);
+ cancelAnimationFrame(stackRaf);
+
+ if(gameAudio)gameAudio.pause();
+ if(ambientAudio)ambientAudio.pause();
+
+ pads.forEach(p=>
+  p.classList.remove("active")
+ );
+
+ swipeTarget=null;
+
+ $("beatIndicator").classList.remove("beat");
+
+ $("game").style.display="none";
+ $("result").style.display="block";
+
+ $("finalScore").textContent=score;
+ $("perfect").textContent=perfect;
+ $("good").textContent=good;
+ $("best").textContent=best;
+
+ if(mode==="stack"){
+  $("missLabel").textContent="Height";
+  $("miss").textContent=Math.max(0,stackBlocks.length-1);
+ }else{
+  $("missLabel").textContent="Miss";
+  $("miss").textContent=misses;
+ }
+}
+
+$("start").onclick=startGame;
+
+$("quit").onclick=()=>{
+ if(mode==="stack"){
+  stackRunning=false;
+  cancelAnimationFrame(stackRaf);
+ }
+ finish();
+};
+
+$("again").onclick=()=>{
+ $("result").style.display="none";
+ $("setup").style.display="block";
+
+ $("beatIndicator").classList.remove("beat");
+
+ if(gameAudio){
+  gameAudio.pause();
+  URL.revokeObjectURL(url);
+  gameAudio=null;
+ }
+
+ if(ambientAudio){
+  ambientAudio.pause();
+  ambientAudio=null;
+ }
+};
+</script>
+
+</body>
+</html>

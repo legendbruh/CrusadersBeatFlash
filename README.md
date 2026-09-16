@@ -4,8 +4,10 @@ An Rhythm Game! , upload any songs it works! (.MP3's Only!)
 
 
 CRUSADERS · BeatFlash
+https://legendbruh.github.io/CrusadersBeatFlash/
 
-CRUSADERS is a rhythm/reaction game with three game modes:
+CRUSADERS BeatFlash
+is a rhythm/reaction game with three game modes:
 
 🎵 1. BeatFlash
 
